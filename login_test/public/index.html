@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Face Detection in Browser</title>
+   
+    <script defer src="../js/face-api.min.js"></script>
+    <script defer src="../js/mobileCamera.js"></script>
+  
+</head>
+</head>
+<body>
+    <h1>Face Detection in Browser</h1>
+    <video id="video" width="600" height="450" autoplay playsinline></video> 
+    <input type="text" id="messageInput" placeholder="Enter message here">
+    <button onclick="sendMessage()">Send Message to Server</button>
+    <h2>Received Messages</h2>
+    <div id="receivedMessages"></div>
+
+   
+
+    <script>
+        const ws = new WebSocket('wss://2969-110-11-127-28.ngrok-free.app/'); // 현재 ip주소로.
+
+        ws.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+
+        ws.onmessage = function(event) {
+            console.log('Message from server: ' + event.data);
+
+            // 서버로부터 받은 메시지를 로컬 스토리지에 저장
+            let receivedMessages = JSON.parse(localStorage.getItem('receivedMessages')) || [];
+            receivedMessages.push(event.data);
+            localStorage.setItem('receivedMessages', JSON.stringify(receivedMessages));
+
+            // 화면에 받은 메시지 목록을 업데이트
+            updateReceivedMessages();
+        };
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
+            if (message) {
+                console.log('Sending message: ' + message);
+                ws.send(message);
+                messageInput.value = ''; // Clear input after sending
+            } else {
+                alert('Please enter a message.');
+            }
+        }
+
+        function updateReceivedMessages() {
+            const receivedMessages = JSON.parse(localStorage.getItem('receivedMessages')) || [];
+            const receivedMessagesDiv = document.getElementById('receivedMessages');
+            receivedMessagesDiv.innerHTML = '';
+            receivedMessages.forEach((msg, index) => {
+                const messageElement = document.createElement('div');
+                messageElement.textContent = `${index + 1}: ${msg}`;
+                receivedMessagesDiv.appendChild(messageElement);
+            });
+        }
+
+        // 페이지 로드 시, 저장된 받은 메시지 목록을 업데이트
+        window.onload = function() {
+            updateReceivedMessages();
+        }
+    </script>
+</body>
+</html>
